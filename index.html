@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Simple Snake Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #game-board {
+            position: relative;
+            background-color: #fcf58a;
+            border: 2px solid #000;
+            margin-top: 20px;
+        }
+
+        .snake {
+            position: absolute;
+            background-color: green; /* Default color if not set by select */
+        }
+
+        .food {
+            position: absolute;
+            background-color: red;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        #controls {
+            margin-bottom: 20px;
+        }
+
+        #color-controls {
+            margin-top: 20px;
+        }
+
+        select {
+            padding: 5px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h2><span id="score">0</span></h2>
+    <div id="controls">
+        <label for="size-select">Choose board size:</label>
+        <select id="size-select">
+            <option value="300">Small</option>
+            <option value="400" selected>Medium</option>
+            <option value="500">Large</option>
+        </select>
+    </div>
+    <div id="color-controls">
+        <label for="snake-color">Select Snake Color:</label>
+        <select id="snake-color">
+            <option value="green">Green</option>
+            <option value="blue">Blue</option>
+            <option value="red">Red</option>
+            <option value="yellow">Yellow</option>
+            <option value="purple">Purple</option>
+            <option value="orange">Orange</option>
+        </select>
+    </div>
+    <div id="game-board"></div>
+
+    <script>
+        const board = document.getElementById('game-board');
+        const scoreDisplay = document.getElementById('score');
+        const sizeSelect = document.getElementById('size-select');
+        const snakeColorSelect = document.getElementById('snake-color');
+        let boardSize = parseInt(sizeSelect.value);
+        const boxSize = 20;
+        let snake = [{ x: 160, y: 200 }, { x: 140, y: 200 }, { x: 120, y: 200 }];
+        let direction = 'RIGHT';
+        let food = { x: 0, y: 0 };
+        let score = 0;
+        let interval;
+
+        function updateBoardSize(size) {
+            boardSize = size;
+            board.style.width = boardSize + 'px';
+            board.style.height = boardSize + 'px';
+            placeFood();
+            resetGame();
+        }
+
+        function drawSnake() {
+            board.innerHTML = '';
+            snake.forEach(part => {
+                const snakePart = document.createElement('div');
+                snakePart.classList.add('snake');
+                snakePart.style.width = boxSize + 'px';
+                snakePart.style.height = boxSize + 'px';
+                snakePart.style.left = part.x + 'px';
+                snakePart.style.top = part.y + 'px';
+                snakePart.style.backgroundColor = snakeColorSelect.value.trim();
+                board.appendChild(snakePart);
+            });
+            drawFood(); 
+        }
+
+        function drawFood() {
+            const foodElement = document.createElement('div');
+            foodElement.classList.add('food');
+            foodElement.style.width = boxSize + 'px';
+            foodElement.style.height = boxSize + 'px';
+            foodElement.style.left = food.x + 'px';
+            foodElement.style.top = food.y + 'px';
+            board.appendChild(foodElement);
+        }
+
+        function randomPosition() {
+            return Math.floor(Math.random() * (boardSize / boxSize)) * boxSize;
+        }
+
+        function placeFood() {
+            food.x = randomPosition();
+            food.y = randomPosition();
+        }
+
+        function moveSnake() {
+            const head = { ...snake[0] };
+            switch (direction) {
+                case 'LEFT':
+                    head.x -= boxSize;
+                    break;
+                case 'RIGHT':
+                    head.x += boxSize;
+                    break;
+                case 'UP':
+                    head.y -= boxSize;
+                    break;
+                case 'DOWN':
+                    head.y += boxSize;
+                    break;
+            }
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                scoreDisplay.innerText = score;
+                placeFood();
+            } else {
+                snake.pop();
+            }
+
+            if (head.x < 0 || head.x >= boardSize || head.y < 0 || head.y >= boardSize || snake.slice(1).some(part => part.x === head.x && part.y === head.y)) {
+                alert('Game Over! Your score: ' + score);
+                resetGame();
+            }
+        }
+
+        function gameLoop() {
+            moveSnake();
+            drawSnake();
+        }
+
+        function startGame() {
+            if (interval) clearInterval(interval);
+            interval = setInterval(gameLoop, 200);
+        }
+
+        function resetGame() {
+            snake = [{ x: 160, y: 200 }, { x: 140, y: 200 }, { x: 120, y: 200 }];
+            direction = 'RIGHT';
+            score = 0;
+            scoreDisplay.innerText = score;
+            placeFood();
+            drawSnake();
+            startGame();
+        }
+
+        sizeSelect.addEventListener('change', () => {
+            const newSize = parseInt(sizeSelect.value);
+            updateBoardSize(newSize);
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft' && direction !== 'RIGHT') direction = 'LEFT';
+            if (e.key === 'ArrowRight' && direction !== 'LEFT') direction = 'RIGHT';
+            if (e.key === 'ArrowUp' && direction !== 'DOWN') direction = 'UP';
+            if (e.key === 'ArrowDown' && direction !== 'UP') direction = 'DOWN';
+        });
+
+        updateBoardSize(boardSize);
+    </script>
+</body>
+</html>
